@@ -1,0 +1,15 @@
+# ECOM6004 Assessment 1 Rules & Guidelines
+
+- **Context**: Curtin University ECOM6004 Assessment 1 (Semester 2, 2026).
+- **Core Constraints**:
+  1. Never mix binary training (80%) and test (20%) samples during model development in Question 2.
+  2. Question 3 evaluates the test set *once* with no refitting or threshold tuning on test outcomes.
+  3. Question 4 uses the full dataset for ordered logit/probit modeling.
+  4. The code MUST run top-to-bottom reproducibly using the student ID as the random seed.
+  5. The output report must strictly contain NO raw code or code appendices; code should remain in `src/` and `main.py`.
+
+- **Coding Standard**:
+  - Always use `statsmodels.formula.api` for binary models (`ols`, `logit`, `probit`).
+  - Use `statsmodels.miscmodels.ordinal_model.OrderedModel` for ordered response models.
+  - Exclude raw intercept vectors when fitting `OrderedModel` as cutpoints are estimated separately.
+  - Return all tabular outputs formatted cleanly using `pandas` dataframes.
