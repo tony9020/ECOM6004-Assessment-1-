@@ -33,6 +33,23 @@ format:
 
 This report presents the analysis of the Bank Marketing dataset using binary and ordered response models. The analysis follows the ECOM6004 Assessment 1 requirements for Semester 2, 2026.
 
+## Empirical Setting
+
+**Research Question:** Which clients should be contacted?
+
+**Dataset:** Bank Marketing Dataset
+
+**Binary Outcome (y):**
+- `yes`: Client subscribed to a term deposit
+- `no`: Client did not subscribe
+
+**Ordered Outcome (response_level):**
+- `0`: No subscription
+- `1`: Subscription after at least two current-campaign contacts
+- `2`: Subscription on the first contact
+
+The ordered response captures the efficiency of client conversion - whether clients subscribe immediately (high value) or require multiple contacts (lower cost efficiency).
+
 # Data Description
 
 The Bank Marketing dataset contains `{{{{ len(full_df) }}}}` observations with the following key variables:
@@ -77,7 +94,7 @@ from src.binary_models import fit_binary_models
 from src.utils import format_summary_table
 
 STUDENT_ID = {student_id}
-full_df, train_df, test_df = load_and_prepare_bank_data("data/bank_assessment_sem2_2026.csv", STUDENT_ID)
+full_df, train_df, test_df, audit_summary = load_and_prepare_bank_data("data/bank_assessment_sem2_2026.csv", STUDENT_ID)
 binary_results = fit_binary_models(train_df)
 coef_table = format_summary_table(binary_results, ['lpm', 'logit', 'probit'])
 coef_table
@@ -103,12 +120,14 @@ The logit model was evaluated on the held-out test set using a 0.50 threshold.
 #| echo: false
 #| warning: false
 
-from src.binary_models import evaluate_test_set
+from src.binary_models import evaluate_test_set, create_decision_log
 from src.utils import format_metrics_table
 
 test_metrics = evaluate_test_set(binary_results['logit'], test_df)
 metrics_table = format_metrics_table(test_metrics)
+decision_log = create_decision_log(test_metrics, 'logit')
 metrics_table
+decision_log
 ```
 
 The test set evaluation shows:
@@ -131,11 +150,13 @@ Ordered Logit and Ordered Probit models were estimated on the full dataset using
 #| echo: false
 #| warning: false
 
-from src.ordered_models import fit_ordered_models
+from src.ordered_models import fit_ordered_models, diagnose_ordered_models
 
 ordered_results = fit_ordered_models(full_df)
 ordered_coef_table = format_summary_table(ordered_results, ['ologit', 'oprobit'])
+ordered_diagnostics = diagnose_ordered_models(ordered_results)
 ordered_coef_table
+ordered_diagnostics
 ```
 
 ## Interpretation

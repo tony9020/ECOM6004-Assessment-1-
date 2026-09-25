@@ -2,6 +2,23 @@
 
 This project implements the analysis for ECOM6004 Assessment 1 (Semester 2, 2026) using Python.
 
+## Empirical Setting
+
+**Dataset:** Bank Marketing Dataset
+
+**Research Question:** Which clients should be contacted?
+
+**Binary Outcome (y):**
+- `yes`: Client subscribed to a term deposit
+- `no`: Client did not subscribe
+
+**Ordered Outcome (response_level):**
+- `0`: No subscription
+- `1`: Subscription after at least two current-campaign contacts
+- `2`: Subscription on the first contact
+
+The ordered response captures the efficiency of client conversion - whether clients subscribe immediately (high value) or require multiple contacts (lower cost efficiency).
+
 ## Project Structure
 
 ```
@@ -9,8 +26,7 @@ ECOM6004_Assessment1/
 ├── .windsurfrules                  # AI agent constraints
 ├── requirements.txt                 # Python dependencies
 ├── data/                            # Data folder
-│   ├── bank_assessment_sem2_2026.csv
-│   └── telco_assessment_sem2_2026.csv
+│   └── bank_assessment_sem2_2026.csv
 ├── src/                             # Python source modules
 │   ├── __init__.py
 │   ├── data_loader.py              # Data prep, features & stratified split
@@ -44,9 +60,7 @@ pip install -r requirements.txt
 
 Edit `main.py` and replace `STUDENT_ID = 12345678` with your actual student ID.
 
-Also update the student ID in:
-- `generate_report.py` (line 64)
-- `StudentID_A1.qmd` (line 4 and line 32)
+Also update the student ID in `generate_report.py` (line 164).
 
 ### 4. Run the Analysis
 
