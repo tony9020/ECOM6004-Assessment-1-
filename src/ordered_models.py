@@ -14,8 +14,12 @@ def fit_ordered_models(df: pd.DataFrame):
     Uses formula interface to respect categorical reference categories.
     """
     # Use formula to create design matrix without intercept, respecting categorical encoding
-    formula = "age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status)"
+    formula = "age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status) - 1"
     X = patsy.dmatrix(formula, data=df, return_type='dataframe')
+    
+    # Ensure no intercept column exists (OrderedModel requires no intercept)
+    if 'Intercept' in X.columns:
+        X = X.drop(columns=['Intercept'])
     
     y = df['response_level'].astype(int)
     

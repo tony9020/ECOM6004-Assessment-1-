@@ -94,7 +94,7 @@ If no errors appear, the installation is successful.
 
 ### Step 5: Update Your Student ID
 
-Open `main.py` in a text editor and find line 8:
+Open `main.py` in a text editor and find line 12:
 ```python
 STUDENT_ID = 12345678
 ```
@@ -102,6 +102,10 @@ STUDENT_ID = 12345678
 Replace `12345678` with your actual numeric student ID.
 
 **Important**: The student ID is used as the random seed for the train/test split, ensuring reproducibility.
+
+Also update the student ID in `StudentID_A1.qmd`:
+- Line 8: `STUDENT_ID = 12345678`
+- Line 3: `[REPLACE_WITH_YOUR_STUDENT_ID]`
 
 ---
 
@@ -113,16 +117,18 @@ ECOM6004_Assessment1/
 ├── requirements.txt                 # Python package dependencies
 ├── guide.md                        # This comprehensive guide
 ├── README.md                        # Quick reference guide
+├── StudentID_A1.qmd                # Quarto report template (rename with your student ID)
 ├── data/                            # Data directory
 │   └── bank_assessment_sem2_2026.csv    # Bank Marketing dataset
 ├── src/                            # Source code modules
 │   ├── __init__.py                 # Package initialization
-│   ├── data_loader.py              # Data loading and preparation
+│   ├── data_loader.py              # Data loading and preparation (with enhanced audit)
 │   ├── binary_models.py            # Binary model fitting and evaluation
 │   ├── ordered_models.py           # Ordered model fitting and diagnostics
 │   └── utils.py                    # Table formatting utilities
-├── main.py                         # Main execution script
-└── StudentID_A1_GenAI_Disclosure.docx  # Required GenAI disclosure form
+├── main.py                         # Main execution script (update STUDENT_ID)
+├── reproducibility_record.csv      # Generated automatically by main.py
+└── StudentID_A1_GenAI_Disclosure.docx  # Required GenAI disclosure form (complete and rename)
 ```
 
 ---
@@ -159,7 +165,7 @@ python main.py
 #### Functions:
 
 **`audit_data(df: pd.DataFrame)`**
-- **Purpose**: Performs data quality checks
+- **Purpose**: Performs comprehensive data quality checks
 - **Returns**: DataFrame with audit summary including:
   - Total observations
   - Missing values count
@@ -167,6 +173,9 @@ python main.py
   - Target variable distribution
   - Response level distribution
   - Age and balance ranges
+  - Value range validation for numeric variables (age, balance, duration, campaign, pdays)
+  - Category validation for all categorical variables (job, marital, education, default, housing, loan, contact, poutcome)
+  - Consistency check between y and response_level (verifies response_level > 0 iff y = "yes")
 
 **`load_and_prepare_bank_data(filepath: str, student_id: int)`**
 - **Purpose**: Loads, prepares, and splits the dataset
@@ -367,6 +376,9 @@ venv\Scripts\activate     # Windows
 
 # Run the analysis
 python main.py
+
+# Generate the report (after running main.py)
+quarto render StudentID_A1.qmd
 ```
 
 ### Expected Output
@@ -398,6 +410,8 @@ The script will print the following sections:
    - Model specifications
    - Formulas used
    - Thresholds
+   - Package versions (pandas, sklearn, statsmodels, scipy, patsy)
+   - Automatically saved to `reproducibility_record.csv`
 
 ---
 
@@ -568,14 +582,15 @@ deactivate
 
 ### Key Files to Modify
 
-- `main.py`: Update your student ID (line 8)
+- `main.py`: Update your student ID (line 12)
+- `StudentID_A1.qmd`: Update your student ID (lines 3 and 8), fill in interpretation placeholders
 - `src/data_loader.py`: Add data transformations
 - `src/binary_models.py`: Modify binary model formula
 - `src/ordered_models.py`: Modify ordered model formula
 
 ### Important Constants
 
-- Student ID: Set in `main.py` line 8
+- Student ID: Set in `main.py` line 12 and `StudentID_A1.qmd` lines 3 and 8
 - Train/test split: 80/20 (fixed)
 - Test threshold: 0.50 (default)
 - Random seed: Student ID (for reproducibility)

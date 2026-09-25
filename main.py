@@ -1,10 +1,14 @@
 import pandas as pd
+import sklearn
+import statsmodels
+import scipy
+import patsy
 from src.data_loader import load_and_prepare_bank_data
 from src.binary_models import fit_binary_models, evaluate_test_set, create_decision_log
 from src.ordered_models import fit_ordered_models, diagnose_ordered_models
 from src.utils import format_summary_table, format_metrics_table
 
-# Replace with your numeric Student ID
+# IMPORTANT: Replace with your actual numeric Student ID before submission
 STUDENT_ID = 12345678
 
 def main():
@@ -64,10 +68,20 @@ def main():
         'binary_formula': 'target ~ age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status)',
         'ordered_formula': 'response_level ~ age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status)',
         'test_evaluation_threshold': 0.50,
-        'ordered_model_distribution': 'logit, probit'
+        'ordered_model_distribution': 'logit, probit',
+        'python_version': pd.__version__,
+        'pandas_version': pd.__version__,
+        'sklearn_version': sklearn.__version__,
+        'statsmodels_version': statsmodels.__version__,
+        'scipy_version': scipy.__version__,
+        'patsy_version': patsy.__version__
     }
     reproducibility_df = pd.DataFrame([reproducibility_record]).T
     print(reproducibility_df.to_string())
+    
+    # Save reproducibility record to CSV for submission
+    reproducibility_df.to_csv('reproducibility_record.csv')
+    print("\nReproducibility record saved to 'reproducibility_record.csv'")
 
 if __name__ == "__main__":
     main()

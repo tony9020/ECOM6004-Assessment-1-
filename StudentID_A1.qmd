@@ -1,0 +1,257 @@
+---
+title: "ECOM6004 Assessment 1 - Bank Marketing Analysis"
+author: "Student ID: [REPLACE_WITH_YOUR_STUDENT_ID]"
+date: "`r Sys.Date()`"
+format:
+  pdf:
+    toc: true
+    number-sections: true
+  html:
+    toc: true
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{python}
+# Import necessary libraries
+import pandas as pd
+import sys
+sys.path.append('.')
+from src.data_loader import load_and_prepare_bank_data
+from src.binary_models import fit_binary_models, evaluate_test_set, create_decision_log
+from src.ordered_models import fit_ordered_models, diagnose_ordered_models
+from src.utils import format_summary_table, format_metrics_table
+
+# Set your student ID
+STUDENT_ID = 12345678  # REPLACE WITH YOUR ACTUAL STUDENT ID
+```
+
+# Introduction
+
+This report presents an analysis of the Bank Marketing dataset to answer the research question: **"Which clients should be contacted?"** The analysis employs binary response models (Linear Probability Model, Logit, and Probit) to predict term deposit subscription, and ordered response models (Ordered Logit and Ordered Probit) to assess the efficiency of client conversion.
+
+# Data Description
+
+The Bank Marketing dataset contains 45,211 observations and 20 variables recording client characteristics, current campaign contact details, previous campaign history, and the outcome of whether the client subscribed to a term deposit.
+
+## Binary Outcome
+
+The binary outcome `y` indicates whether the client subscribed to a term deposit:
+- `yes`: Client subscribed
+- `no`: Client did not subscribe
+
+## Ordered Outcome
+
+The ordered outcome `response_level` captures the efficiency of client conversion:
+- `0`: No subscription
+- `1`: Subscription after at least two current-campaign contacts
+- `2`: Subscription on the first contact
+
+Higher values indicate more efficient conversion (fewer contacts needed).
+
+# Data Preparation
+
+```{python}
+# Load and prepare data
+full_df, train_df, test_df, audit_summary = load_and_prepare_bank_data("data/bank_assessment_sem2_2026.csv", STUDENT_ID)
+```
+
+## Data Quality Audit
+
+```{python}
+#| label: tbl-audit
+#| tbl-cap: Data Quality Audit Summary
+audit_summary
+```
+
+## Train/Test Split
+
+The dataset was split into 80% training and 20% test sets, stratified by the binary outcome to maintain the event rate. The split uses the student ID as the random seed for reproducibility.
+
+- **Full dataset**: `r len(full_df)` observations
+- **Training set**: `r len(train_df)` observations
+- **Test set**: `r len(test_df)` observations
+
+## Variable Transformations
+
+The following transformations were applied according to the data dictionary:
+
+- `target`: Binary indicator (1 if y='yes', 0 otherwise)
+- `age10`: (age - 40) / 10 (centered and scaled)
+- `balance1000`: balance / 1000 (scaled to thousands)
+- `prior_status`: Categorical variable constructed from pdays and poutcome:
+  - 'not previously contacted' when pdays = -1
+  - 'previous success' when pdays != -1 and poutcome = 'success'
+  - 'previous failure' when pdays != -1 and poutcome = 'failure'
+  - 'previous other/unknown' otherwise
+
+Reference categories were set as:
+- housing: 'no'
+- loan: 'no'
+- contact: 'telephone'
+- prior_status: 'not previously contacted'
+
+# Binary Response Models
+
+## Model Specification
+
+The common specification for all binary models is:
+
+$$
+\text{target} = \beta_0 + \beta_1 \text{age10} + \beta_2 \text{balance1000} + \beta_3 \text{housing} + \beta_4 \text{loan} + \beta_5 \text{contact} + \beta_6 \text{previous} + \beta_7 \text{prior\_status} + \varepsilon
+$$
+
+## Model Estimation
+
+Three binary response models were estimated on the training sample:
+1. Linear Probability Model (LPM)
+2. Logit
+3. Probit
+
+```{python}
+# Fit binary models on training data
+binary_results = fit_binary_models(train_df)
+```
+
+## Model Comparison
+
+```{python}
+#| label: tbl-binary-coef
+#| tbl-cap: Binary Model Coefficient Comparison
+coef_table = format_summary_table(binary_results, ['lpm', 'logit', 'probit'])
+coef_table
+```
+
+The AIC values for model comparison are:
+- **Logit AIC**: `r binary_results['logit'].aic`
+- **Probit AIC**: `r binary_results['probit'].aic`
+
+Based on AIC, the [SELECTED_MODEL] was selected for test evaluation.
+
+# Test Set Evaluation
+
+The selected binary model was applied to the held-out test set exactly once, with no refitting or threshold tuning on test outcomes.
+
+```{python}
+# Evaluate on test set
+test_metrics = evaluate_test_set(binary_results['logit'], test_df)
+```
+
+## Evaluation Metrics
+
+```{python}
+#| label: tbl-test-metrics
+#| tbl-cap: Test Set Evaluation Metrics
+metrics_table = format_metrics_table(test_metrics)
+metrics_table
+```
+
+## Confusion Matrix
+
+```{python}
+#| label: tbl-confusion
+#| tbl-cap: Confusion Matrix
+confusion_df = pd.DataFrame(
+    test_metrics['confusion_matrix'],
+    index=['Actual Negative', 'Actual Positive'],
+    columns=['Predicted Negative', 'Predicted Positive']
+)
+confusion_df
+```
+
+## Binary-Stage Decision Log
+
+```{python}
+#| label: tbl-decision
+#| tbl-cap: Binary-Stage Decision Log
+decision_log = create_decision_log(test_metrics, 'logit')
+decision_log
+```
+
+Based on the test evaluation, the model achieves a balanced accuracy of `r round(test_metrics['balanced_accuracy'] * 100, 2)`% with a Brier score of `r round(test_metrics['brier_score'], 4)`. The sensitivity is `r round(test_metrics['sensitivity'] * 100, 2)`% and specificity is `r round(test_metrics['specificity'] * 100, 2)`%.
+
+# Ordered Response Models
+
+## Model Specification
+
+The ordered response models predict `response_level` using the same set of predictors:
+
+$$
+\text{response\_level} = \beta_1 \text{age10} + \beta_2 \text{balance1000} + \beta_3 \text{housing} + \beta_4 \text{loan} + \beta_5 \text{contact} + \beta_6 \text{previous} + \beta_7 \text{prior\_status} + \text{cutpoints}
+$$
+
+Ordered Logit and Ordered Probit models were estimated on the full dataset.
+
+```{python}
+# Fit ordered models on full dataset
+ordered_results = fit_ordered_models(full_df)
+```
+
+## Model Comparison
+
+```{python}
+#| label: tbl-ordered-coef
+#| tbl-cap: Ordered Model Coefficient Comparison
+ordered_coef_table = format_summary_table(ordered_results, ['ologit', 'oprobit'])
+ordered_coef_table
+```
+
+## Model Diagnostics
+
+```{python}
+#| label: tbl-ordered-diag
+#| tbl-cap: Ordered Model Diagnostics
+ordered_diagnostics = diagnose_ordered_models(ordered_results)
+ordered_diagnostics
+```
+
+The AIC values for ordered model comparison are:
+- **Ordered Logit AIC**: `r ordered_results['ologit'].aic`
+- **Ordered Probit AIC**: `r ordered_results['oprobit'].aic`
+
+# Discussion
+
+## Binary Model Results
+
+The binary models provide insights into which client characteristics are associated with term deposit subscription. [INTERPRET COEFFICIENTS HERE - e.g., positive coefficients on balance and age indicate that older clients with higher balances are more likely to subscribe].
+
+The selected model achieves [DISCUSS PERFORMANCE - e.g., moderate balanced accuracy, suggesting the model has some discriminatory power but may benefit from additional predictors or feature engineering].
+
+## Ordered Model Results
+
+The ordered models assess the efficiency of client conversion. Positive coefficients indicate factors associated with higher response levels (more efficient conversion, i.e., subscription on first contact).
+
+[INTERPRET ORDERED MODEL COEFFICIENTS HERE - e.g., certain client characteristics may predict immediate subscription versus requiring multiple contacts].
+
+## Client Recommendations
+
+Based on the binary-stage decision log, the recommendation is to [PROCEED WITH CAUTION depending on balanced accuracy]. The model's performance suggests [BUSINESS RECOMMENDATION - e.g., it can be used as a screening tool but should be combined with business judgment].
+
+The ordered model results provide additional insight into which clients are likely to convert efficiently (on first contact) versus those requiring multiple follow-ups, allowing for more targeted contact strategies.
+
+# Reproducibility Record
+
+```{python}
+#| label: tbl-reproducibility
+#| tbl-cap: Reproducibility Record
+reproducibility_record = {
+    'student_id': STUDENT_ID,
+    'random_seed': STUDENT_ID,
+    'train_test_split': '80/20 stratified',
+    'binary_models': ['LPM', 'Logit', 'Probit'],
+    'ordered_models': ['Ordered Logit', 'Ordered Probit'],
+    'binary_formula': 'target ~ age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status)',
+    'ordered_formula': 'response_level ~ age10 + balance1000 + C(housing) + C(loan) + C(contact) + previous + C(prior_status)',
+    'test_evaluation_threshold': 0.50,
+    'ordered_model_distribution': 'logit, probit'
+}
+reproducibility_df = pd.DataFrame([reproducibility_record]).T
+reproducibility_df
+```
+
+# References
+
+Moro, S., Rita, P., and Cortez, P. (2014). Bank Marketing [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
