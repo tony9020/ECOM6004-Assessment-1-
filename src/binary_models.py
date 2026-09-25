@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 from sklearn.metrics import confusion_matrix, brier_score_loss

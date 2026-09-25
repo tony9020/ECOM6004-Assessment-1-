@@ -34,8 +34,6 @@ ECOM6004_Assessment1/
 │   ├── ordered_models.py           # Ordered Logit & Probit
 │   └── utils.py                    # Formatter & helper functions
 ├── main.py                          # Master execution pipeline
-├── generate_report.py              # Converts results to Quarto/Markdown report
-├── StudentID_A1.qmd                 # Quarto source file for HTML/PDF report
 ├── StudentID_A1_GenAI_Disclosure.docx # Required GenAI Disclosure Form
 └── README.md                        # This file
 ```
@@ -60,8 +58,6 @@ pip install -r requirements.txt
 
 Edit `main.py` and replace `STUDENT_ID = 12345678` with your actual student ID.
 
-Also update the student ID in `generate_report.py` (line 164).
-
 ### 4. Run the Analysis
 
 ```bash
@@ -74,22 +70,8 @@ This will:
 - Evaluate the selected model on the test set
 - Fit Ordered Logit and Ordered Probit models on the full dataset
 - Print coefficient comparison tables and evaluation metrics
-
-### 5. Generate Quarto Report
-
-```bash
-python generate_report.py
-```
-
-This will generate `StudentID_A1.qmd` with the analysis results embedded.
-
-### 6. Compile Quarto Report
-
-To compile the Quarto report to HTML or PDF:
-
-```bash
-quarto render StudentID_A1.qmd
-```
+- Generate binary-stage decision log
+- Output reproducibility record
 
 ## Key Features
 
@@ -104,10 +86,9 @@ quarto render StudentID_A1.qmd
 - Never mix training and test samples during model development
 - Test set is evaluated once with no refitting or threshold tuning
 - Ordered models use the full dataset
-- The report must contain NO raw code - code remains in `src/` and `main.py`
+- All code runs top-to-bottom reproducibly using student ID as random seed
 
 ## Submission Files
 
-1. **StudentID_A1.pdf** (or .html) - Compiled Quarto report (15-20 pages max)
-2. **StudentID_A1.qmd** - Quarto source file
-3. **StudentID_A1_GenAI_Disclosure.docx** - Completed GenAI disclosure form
+1. **main.py** - Executable Python script with all analysis code
+2. **StudentID_A1_GenAI_Disclosure.docx** - Completed GenAI disclosure form

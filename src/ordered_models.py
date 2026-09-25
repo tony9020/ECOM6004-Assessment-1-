@@ -1,5 +1,4 @@
 import pandas as pd
-import statsmodels.api as sm
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 import patsy
 
